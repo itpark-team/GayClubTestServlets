@@ -1,43 +1,34 @@
 package org.example.servlets.repository;
 
 import org.example.servlets.model.User;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 
+import javax.servlet.ServletException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 public class UsersRepository {
-    private static UsersRepository instance = null;
+    private SessionFactory sessionFactory;
 
-    public static UsersRepository getInstance() {
-        if (instance == null) {
-            instance = new UsersRepository();
-
-            Collections.addAll(instance.users,
-                    new User(1, "Vasya228", 1500),
-                    new User(2, "Vadim339", 4200),
-                    new User(3, "Petya1337", 7500)
-            );
-        }
-        return instance;
-    }
-
-    private List<User> users;
-    private int globalId;
-
-    private UsersRepository() {
-        users = new ArrayList<>();
-        globalId = 0;
+    public UsersRepository(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     public void addNew(User user) {
-        globalId++;
-        user.setId(globalId);
+        Session session = sessionFactory.openSession();
+        Transaction transaction = session.beginTransaction();
 
-        users.add(user);
+        session.save(user);
+
+        transaction.commit();
+        session.close();
     }
 
-    public List<User> getAll() {
-        return users;
+    public List<User> getAll() throws ServletException {
+        return (List<User>) sessionFactory.openSession().createQuery("FROM User ORDER BY id").list();
     }
+
 }
